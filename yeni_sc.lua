@@ -1,1474 +1,774 @@
--- ╔═════════════════════════════════════════════════════════════════════════╗
--- ║  BLOX FRUITS ULTIMATE DELUXE EDITION - 5000+ LINES COMPLETE            ║
--- ║  WITH ALL KNOWN FEATURES FROM POPULAR SCRIPTS                          ║
--- ║  Türkiye Saati/Tarihi + Tüm Özellikler                                  ║
--- ║  Dark Purple Professional UI                                            ║
--- ╚═════════════════════════════════════════════════════════════════════════╝
-
--- ═══════════════════════════════════════════════════════════════════════════
--- IMPORTS & SERVICES
--- ═══════════════════════════════════════════════════════════════════════════
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local Workspace = game:GetService("Workspace")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local TweenService = game:GetService("TweenService")
-local VirtualUser = game:GetService("VirtualUser")
-local TeleportService = game:GetService("TeleportService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- ═══════════════════════════════════════════════════════════════════════════
--- TÜRKIYE SAAT & TARİH SİSTEMİ
--- ═══════════════════════════════════════════════════════════════════════════
-
-local TurkeyTimeZone = 3 -- UTC +3 (Türkiye)
-local function GetTurkeyTime()
-    local utcTime = os.time()
-    local turkeyTime = utcTime + (TurkeyTimeZone * 3600)
-    return os.date("%H:%M:%S", turkeyTime)
-end
-
-local function GetTurkeyDate()
-    local utcTime = os.time()
-    local turkeyTime = utcTime + (TurkeyTimeZone * 3600)
-    return os.date("%d/%m/%Y", turkeyTime)
-end
-
-local function GetFullTurkeyDateTime()
-    return GetTurkeyDate() .. " " .. GetTurkeyTime()
-end
-
-print("[SİSTEM] Türkiye Saati: " .. GetTurkeyTime())
-print("[SİSTEM] Türkiye Tarihi: " .. GetTurkeyDate())
-
--- ═══════════════════════════════════════════════════════════════════════════
--- GLOBAL CONFIGURATION & STATE MANAGEMENT
--- ═══════════════════════════════════════════════════════════════════════════
-
-local ScriptEnabled = true
-local SessionStartTime = os.time()
-
-local Config = {
-    -- AUTO FARM SETTINGS
-    AutoFarm = {
-        Enabled = false,
-        FarmType = "XP",
-        EnemyType = "All",
-        MaxDistance = 50,
-        AutoAttack = true,
-        DodgeAttacks = true,
-        AutoRegen = true,
-        TargetLevel = 2500,
-        BringMobs = false,
-        MobDistance = 20,
-        SafeMode = true,
-    },
-    
-    -- BOSS FARMING
-    AutoBoss = {
-        Enabled = false,
-        SelectedBoss = "Indra",
-        UseSkills = true,
-        AutoHeal = true,
-        HealPercentage = 30,
-        AutoBuff = true,
-        RepeatBoss = true,
-        BossHopEnabled = true,
-    },
-    
-    -- FRUIT SYSTEM
-    FruitFarm = {
-        Enabled = false,
-        AutoEat = true,
-        AutoCollect = true,
-        AvoidWaste = true,
-        RespawnCheck = true,
-        NotifyRespawn = true,
-        TargetFruit = "All",
-        SnipeFruit = "",
-        AutoSnipe = false,
-    },
-    
-    -- CHEST FARMING
-    ChestFarming = {
-        Enabled = false,
-        ChestType = "Legendary",
-        AutoOpen = true,
-        OpenAll = true,
-        LegendaryOnly = true,
-        AutoSell = true,
-        ChestESP = true,
-    },
-    
-    -- STATS & UPGRADES
-    Stats = {
-        Enabled = false,
-        AutoUpgrade = true,
-        PriorityStats = {"Health", "Energy", "Melee", "Defense"},
-        BalancedMode = false,
-        AutoStats = true,
-    },
-    
-    -- QUEST SYSTEM
-    Quest = {
-        Enabled = false,
-        AutoAccept = true,
-        AutoComplete = true,
-        OptimalPath = true,
-        FocusRewards = "Experience",
-    },
-    
-    -- MASTERY FARMING
-    Mastery = {
-        Enabled = false,
-        FarmWeapon = true,
-        FarmFruit = true,
-        FarmAbility = true,
-        TargetWeapon = "Sword",
-        TargetAbility = "All",
-        MethodHalf = true,
-    },
-    
-    -- COMBAT SYSTEM
-    Combat = {
-        AutoAttack = true,
-        UseWeapon = true,
-        UseDevilFruit = true,
-        UseSkills = true,
-        UseAbilities = true,
-        ComboDamage = true,
-        AutoDodge = true,
-        BlockAll = true,
-        AutoHaki = true,
-        HakiType = "Normal",
-    },
-    
-    -- SEA EVENTS
-    SeaEvents = {
-        Enabled = false,
-        EventType = "Shark",
-        AutoParticipate = true,
-        CollectRewards = true,
-        EventNotification = true,
-    },
-    
-    -- TRIALS
-    Trials = {
-        Enabled = false,
-        TrialType = "Sea Trial",
-        AutoComplete = true,
-        SkipWaves = true,
-    },
-    
-    -- DUNGEONS
-    Dungeons = {
-        Enabled = false,
-        DungeonType = "Magma Dungeon",
-        AutoLoot = true,
-        MultipleRuns = true,
-        AutoSell = true,
-        MaxAttempts = 5,
-    },
-    
-    -- DRAGON HUNTING
-    Dragon = {
-        Enabled = false,
-        AutoHunt = true,
-        CollectDragonScale = true,
-        RespawnMonitor = true,
-        AutoEat = true,
-    },
-    
-    -- MIRAGE ISLAND
-    Mirage = {
-        Enabled = false,
-        AutoFarm = true,
-        CollectCohesion = true,
-        AutoBoss = true,
-        EventMode = true,
-        AutoTeleport = true,
-        NotifySpawn = true,
-    },
-    
-    -- KITSUNE EVENT
-    Kitsune = {
-        Enabled = false,
-        AutoHunt = true,
-        CollectOrbs = true,
-        PowerLevelUp = true,
-        EventNotify = true,
-        AutoSkills = true,
-    },
-    
-    -- FACTORY FARM
-    Factory = {
-        Enabled = false,
-        AutoFarm = true,
-        CollectItems = true,
-        AutoComplete = true,
-    },
-    
-    -- RAID SYSTEM
-    Raids = {
-        Enabled = false,
-        RaidType = "Raid Dungeon",
-        AutoJoin = true,
-        AutoLoot = true,
-        TeamCoordination = true,
-    },
-    
-    -- ISLAND EVENTS
-    IslandEvents = {
-        Enabled = false,
-        EventType = "Meteor Shower",
-        AutoParticipate = true,
-        CollectAll = true,
-        EventAlert = true,
-    },
-    
-    -- PVP ARENA
-    PvP = {
-        Enabled = false,
-        AutoFight = true,
-        UsePowers = true,
-        Ranking = "Gold",
-        AutoBattle = true,
-        AimbotEnabled = false,
-        TargetPlayer = "None",
-    },
-    
-    -- CURSE SYSTEM
-    Curse = {
-        Enabled = false,
-        AutoApply = true,
-        TargetCurse = "Darkness",
-        MaxStacks = 10,
-    },
-    
-    -- ABILITIES & POWERS
-    Abilities = {
-        Enabled = false,
-        AutoLearn = true,
-        TargetAbility = "All",
-        MaxMastery = 100,
-        RaceV3 = true,
-        RaceV4 = true,
-        Godhuman = true,
-    },
-    
-    -- ESP & VISUALIZATION
-    ESP = {
-        Enabled = false,
-        ShowFruits = true,
-        ShowPlayers = true,
-        ShowMobs = true,
-        ShowChests = true,
-        ShowBosses = true,
-        MaxDistance = 5000,
-        DrawDistance = true,
-    },
-    
-    -- UTILITY FEATURES
-    Utility = {
-        NoClip = false,
-        SpeedBoost = false,
-        SpeedMultiplier = 2,
-        InfiniteStamina = false,
-        GodMode = false,
-        InvisibilityMode = false,
-        AutoRespawn = true,
-        AntiAFK = true,
-    },
-    
-    -- MOVEMENT
-    Movement = {
-        FastTeleport = true,
-        TeleportSpeed = 300,
-        SafeTeleport = true,
-        BypassCooldown = true,
-        FlightEnabled = false,
-        FlightSpeed = 50,
-    },
-    
-    -- ANTI-CHEAT BYPASS
-    AntiCheat = {
-        Enabled = true,
-        HumanizeActions = true,
-        RandomDelay = true,
-        SafeMode = true,
-        ErrorHandling = true,
-    },
-    
-    -- AUTOMATIC FEATURES
-    Auto = {
-        AutoCollectDrop = true,
-        AutoBuyItems = true,
-        AutoBuyFruit = true,
-        AutoBuySwords = true,
-        AutoBuyGuns = true,
-        AutoSkills = true,
-        AutoHealing = true,
-    },
-}
-
--- ═══════════════════════════════════════════════════════════════════════════
--- UI THEME & STYLING
--- ═══════════════════════════════════════════════════════════════════════════
-
-local UITheme = {
-    PrimaryColor = Color3.fromRGB(75, 0, 130),      -- Dark Purple
-    SecondaryColor = Color3.fromRGB(138, 43, 226),  -- Blue Violet
-    TertiaryColor = Color3.fromRGB(75, 50, 130),    -- Deep Purple
-    TextColor = Color3.fromRGB(255, 255, 255),      -- White
-    ButtonColor = Color3.fromRGB(100, 50, 150),     -- Medium Purple
-    HoverColor = Color3.fromRGB(120, 60, 170),      -- Light Purple
-    SuccessColor = Color3.fromRGB(50, 205, 50),     -- Green
-    ErrorColor = Color3.fromRGB(220, 20, 60),       -- Red
-    WarningColor = Color3.fromRGB(255, 140, 0),     -- Orange
-    InfoColor = Color3.fromRGB(30, 144, 255),       -- Blue
-    AccentColor = Color3.fromRGB(200, 100, 255),    -- Light Purple
-}
-
--- ═══════════════════════════════════════════════════════════════════════════
--- STATISTICS & TRACKING SYSTEM
--- ═══════════════════════════════════════════════════════════════════════════
-
-local Statistics = {
-    SessionStartTime = SessionStartTime,
-    SessionDuration = 0,
-    EnemiesDefeated = 0,
-    BossesFarmed = 0,
-    ChestsOpened = 0,
-    FruitsCollected = 0,
-    GoldEarned = 0,
-    LevelGained = 0,
-    MasteryGained = 0,
-    AbilitiesLearned = 0,
-    PlaytimeMinutes = 0,
-    DungeonRuns = 0,
-    RaidRuns = 0,
-    TrialsCompleted = 0,
-}
-
--- ═══════════════════════════════════════════════════════════════════════════
--- MAIN UI CREATION
--- ═══════════════════════════════════════════════════════════════════════════
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BloxFruitsUltimateUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = PlayerGui
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = UITheme.PrimaryColor
-MainFrame.BorderSizePixel = 0
-MainFrame.Size = UDim2.new(0.32, 0, 0.8, 0)
-MainFrame.Position = UDim2.new(0.01, 0, 0.1, 0)
-MainFrame.Parent = ScreenGui
-
-local CornerRadius = Instance.new("UICorner")
-CornerRadius.CornerRadius = UDim.new(0, 16)
-CornerRadius.Parent = MainFrame
-
--- Shadow Effect
-local Shadow = Instance.new("Frame")
-Shadow.Name = "Shadow"
-Shadow.BackgroundColor3 = Color3.new(0, 0, 0)
-Shadow.BackgroundTransparency = 0.3
-Shadow.BorderSizePixel = 0
-Shadow.Size = UDim2.new(1, 12, 1, 12)
-Shadow.Position = UDim2.new(0, 5, 0, 5)
-Shadow.ZIndex = -1
-Shadow.Parent = MainFrame
-
-local ShadowCorner = Instance.new("UICorner")
-ShadowCorner.CornerRadius = UDim.new(0, 16)
-ShadowCorner.Parent = Shadow
-
--- TITLE BAR
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.BackgroundColor3 = UITheme.SecondaryColor
-TitleBar.BorderSizePixel = 0
-TitleBar.Size = UDim2.new(1, 0, 0.09, 0)
-TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 16)
-TitleCorner.Parent = TitleBar
-
--- TITLE TEXT
-local TitleText = Instance.new("TextLabel")
-TitleText.Name = "TitleText"
-TitleText.BackgroundTransparency = 1
-TitleText.Size = UDim2.new(0.65, 0, 1, 0)
-TitleText.Position = UDim2.new(0.05, 0, 0, 0)
-TitleText.Text = "⚔️ BLOX FRUITS ULTIMATE"
-TitleText.TextColor3 = UITheme.TextColor
-TitleText.TextScaled = true
-TitleText.Font = Enum.Font.GothamBold
-TitleText.Parent = TitleBar
-
--- VERSION & TIME
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Name = "InfoLabel"
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Size = UDim2.new(0.3, 0, 0.5, 0)
-InfoLabel.Position = UDim2.new(0.05, 0, 0.25, 0)
-InfoLabel.Text = "v5.0"
-InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-InfoLabel.TextScaled = true
-InfoLabel.Font = Enum.Font.Gotham
-InfoLabel.Parent = TitleBar
-
--- CLOSE BUTTON
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.BackgroundColor3 = UITheme.ErrorColor
-CloseButton.BorderSizePixel = 0
-CloseButton.Size = UDim2.new(0.12, 0, 1, 0)
-CloseButton.Position = UDim2.new(0.88, 0, 0, 0)
-CloseButton.Text = "✕"
-CloseButton.TextColor3 = UITheme.TextColor
-CloseButton.TextScaled = true
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Parent = TitleBar
-
-CloseButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- TIME & DATE DISPLAY
-local TimeLabel = Instance.new("TextLabel")
-TimeLabel.Name = "TimeLabel"
-TimeLabel.BackgroundColor3 = UITheme.ButtonColor
-TimeLabel.BorderSizePixel = 0
-TimeLabel.Size = UDim2.new(1, 0, 0.08, 0)
-TimeLabel.Position = UDim2.new(0, 0, 0.09, 0)
-TimeLabel.Text = "⏰ " .. GetFullTurkeyDateTime()
-TimeLabel.TextColor3 = UITheme.TextColor
-TimeLabel.TextScaled = true
-TimeLabel.Font = Enum.Font.Gotham
-TimeLabel.Parent = MainFrame
-
-local TimeCorner = Instance.new("UICorner")
-TimeCorner.CornerRadius = UDim.new(0, 10)
-TimeCorner.Parent = TimeLabel
-
--- CONTENT SCROLLING FRAME
-local ContentScroll = Instance.new("ScrollingFrame")
-ContentScroll.Name = "ContentScroll"
-ContentScroll.BackgroundTransparency = 1
-ContentScroll.BorderSizePixel = 0
-ContentScroll.Size = UDim2.new(1, 0, 0.83, 0)
-ContentScroll.Position = UDim2.new(0, 0, 0.17, 0)
-ContentScroll.CanvasSize = UDim2.new(0, 0, 8, 0)
-ContentScroll.ScrollBarThickness = 10
-ContentScroll.ScrollBarImageColor3 = UITheme.SecondaryColor
-ContentScroll.Parent = MainFrame
-
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 9)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = ContentScroll
-
-local UIPadding = Instance.new("UIPadding")
-UIPadding.PaddingLeft = UDim.new(0, 12)
-UIPadding.PaddingRight = UDim.new(0, 12)
-UIPadding.PaddingTop = UDim.new(0, 12)
-UIPadding.PaddingBottom = UDim.new(0, 12)
-UIPadding.Parent = ContentScroll
-
--- ═══════════════════════════════════════════════════════════════════════════
--- BUTTON CREATION FUNCTIONS
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function CreateCategoryLabel(Name, Icon)
-    local CategoryLabel = Instance.new("TextLabel")
-    CategoryLabel.Name = Name
-    CategoryLabel.BackgroundColor3 = UITheme.SecondaryColor
-    CategoryLabel.BorderSizePixel = 0
-    CategoryLabel.Size = UDim2.new(1, 0, 0.07, 0)
-    CategoryLabel.Text = (Icon or "►") .. " " .. Name
-    CategoryLabel.TextColor3 = UITheme.TextColor
-    CategoryLabel.TextScaled = true
-    CategoryLabel.Font = Enum.Font.GothamBold
-    CategoryLabel.Parent = ContentScroll
-    
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = CategoryLabel
-    
-    return CategoryLabel
-end
-
-local function CreateToggleButton(Name, ConfigPath, Callback)
-    local Button = Instance.new("TextButton")
-    Button.Name = Name
-    Button.BackgroundColor3 = UITheme.ButtonColor
-    Button.BorderSizePixel = 0
-    Button.Size = UDim2.new(1, 0, 0.06, 0)
-    Button.Text = "⚪ " .. Name
-    Button.TextColor3 = UITheme.TextColor
-    Button.TextScaled = true
-    Button.Font = Enum.Font.Gotham
-    Button.Parent = ContentScroll
-    
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 8)
-    Corner.Parent = Button
-    
-    local isToggled = false
-    
-    Button.MouseButton1Click:Connect(function()
-        isToggled = not isToggled
-        if isToggled then
-            Button.Text = "🟢 " .. Name
-            Button.BackgroundColor3 = UITheme.SuccessColor
-        else
-            Button.Text = "⚪ " .. Name
-            Button.BackgroundColor3 = UITheme.ButtonColor
-        end
-        if Callback then
-            Callback(isToggled)
-        end
-    end)
-    
-    Button.MouseEnter:Connect(function()
-        Button.BackgroundColor3 = UITheme.HoverColor
-    end)
-    
-    Button.MouseLeave:Connect(function()
-        if isToggled then
-            Button.BackgroundColor3 = UITheme.SuccessColor
-        else
-            Button.BackgroundColor3 = UITheme.ButtonColor
-        end
-    end)
-    
-    return Button, function() return isToggled end
-end
-
-local function CreateDropdownButton(Name, Options, Callback)
-    local DropdownFrame = Instance.new("Frame")
-    DropdownFrame.Name = Name .. "Dropdown"
-    DropdownFrame.BackgroundTransparency = 1
-    DropdownFrame.Size = UDim2.new(1, 0, 0.13, 0)
-    DropdownFrame.Parent = ContentScroll
-    
-    local MainButton = Instance.new("TextButton")
-    MainButton.Name = "MainButton"
-    MainButton.BackgroundColor3 = UITheme.ButtonColor
-    MainButton.BorderSizePixel = 0
-    MainButton.Size = UDim2.new(1, 0, 0.35, 0)
-    MainButton.Text = Name .. ": " .. Options[1]
-    MainButton.TextColor3 = UITheme.TextColor
-    MainButton.TextScaled = true
-    MainButton.Font = Enum.Font.Gotham
-    MainButton.Parent = DropdownFrame
-    
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 8)
-    Corner.Parent = MainButton
-    
-    local OptionsFrame = Instance.new("Frame")
-    OptionsFrame.Name = "OptionsFrame"
-    OptionsFrame.BackgroundColor3 = UITheme.TertiaryColor
-    OptionsFrame.BorderSizePixel = 0
-    OptionsFrame.Size = UDim2.new(1, 0, 0.62, 0)
-    OptionsFrame.Position = UDim2.new(0, 0, 0.38, 0)
-    OptionsFrame.Visible = false
-    OptionsFrame.Parent = DropdownFrame
-    
-    local OptionsLayout = Instance.new("UIListLayout")
-    OptionsLayout.Padding = UDim.new(0, 4)
-    OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    OptionsLayout.Parent = OptionsFrame
-    
-    local OptionsPadding = Instance.new("UIPadding")
-    OptionsPadding.PaddingLeft = UDim.new(0, 4)
-    OptionsPadding.PaddingRight = UDim.new(0, 4)
-    OptionsPadding.PaddingTop = UDim.new(0, 4)
-    OptionsPadding.Parent = OptionsFrame
-    
-    local selectedOption = Options[1]
-    
-    MainButton.MouseButton1Click:Connect(function()
-        OptionsFrame.Visible = not OptionsFrame.Visible
-    end)
-    
-    for _, option in ipairs(Options) do
-        local OptionButton = Instance.new("TextButton")
-        OptionButton.BackgroundColor3 = UITheme.SecondaryColor
-        OptionButton.BorderSizePixel = 0
-        OptionButton.Size = UDim2.new(1, 0, 0.2, 0)
-        OptionButton.Text = option
-        OptionButton.TextColor3 = UITheme.TextColor
-        OptionButton.TextScaled = true
-        OptionButton.Font = Enum.Font.Gotham
-        OptionButton.Parent = OptionsFrame
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Alperen'in kişisel web sitesi - Yazılım Geliştirici & Girişimci">
+    <title>Alperen | Kişisel Web Sitesi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
         
-        local OptionCorner = Instance.new("UICorner")
-        OptionCorner.CornerRadius = UDim.new(0, 6)
-        OptionCorner.Parent = OptionButton
+        :root {
+            --primary: #6366f1;
+        }
         
-        OptionButton.MouseButton1Click:Connect(function()
-            selectedOption = option
-            MainButton.Text = Name .. ": " .. option
-            OptionsFrame.Visible = false
-            if Callback then
-                Callback(option)
-            end
-        end)
-    end
-    
-    return DropdownFrame, function() return selectedOption end
-end
-
-local function CreateSliderButton(Name, MinValue, MaxValue, DefaultValue, Callback)
-    local SliderFrame = Instance.new("Frame")
-    SliderFrame.Name = Name .. "Slider"
-    SliderFrame.BackgroundTransparency = 1
-    SliderFrame.Size = UDim2.new(1, 0, 0.09, 0)
-    SliderFrame.Parent = ContentScroll
-    
-    local Label = Instance.new("TextLabel")
-    Label.BackgroundTransparency = 1
-    Label.Size = UDim2.new(0.4, 0, 0.4, 0)
-    Label.Text = Name .. ": " .. DefaultValue
-    Label.TextColor3 = UITheme.TextColor
-    Label.TextScaled = true
-    Label.Font = Enum.Font.Gotham
-    Label.Parent = SliderFrame
-    
-    local SliderBackground = Instance.new("Frame")
-    SliderBackground.BackgroundColor3 = UITheme.ButtonColor
-    SliderBackground.BorderSizePixel = 0
-    SliderBackground.Size = UDim2.new(0.55, 0, 0.4, 0)
-    SliderBackground.Position = UDim2.new(0.45, 0, 0.3, 0)
-    SliderBackground.Parent = SliderFrame
-    
-    local SliderCorner = Instance.new("UICorner")
-    SliderCorner.CornerRadius = UDim.new(0, 6)
-    SliderCorner.Parent = SliderBackground
-    
-    local SliderButton = Instance.new("TextButton")
-    SliderButton.BackgroundColor3 = UITheme.SuccessColor
-    SliderButton.BorderSizePixel = 0
-    SliderButton.Size = UDim2.new(0.1, 0, 1, 0)
-    SliderButton.Text = ""
-    SliderButton.Parent = SliderBackground
-    
-    local SliderButtonCorner = Instance.new("UICorner")
-    SliderButtonCorner.CornerRadius = UDim.new(0, 4)
-    SliderButtonCorner.Parent = SliderButton
-    
-    local CurrentValue = DefaultValue
-    local Dragging = false
-    
-    SliderButton.MouseButton1Down:Connect(function()
-        Dragging = true
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            Dragging = false
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local Mouse = Players:GetMouse()
-            local SliderSize = SliderBackground.AbsoluteSize.X
-            local MousePos = Mouse.X - SliderBackground.AbsolutePosition.X
-            local Percentage = math.clamp(MousePos / SliderSize, 0, 1)
-            CurrentValue = math.floor(MinValue + (MaxValue - MinValue) * Percentage)
-            Label.Text = Name .. ": " .. CurrentValue
-            SliderButton.Position = UDim2.new(Percentage - 0.05, 0, 0, 0)
-            if Callback then
-                Callback(CurrentValue)
-            end
-        end
-    end)
-    
-    return SliderFrame, function() return CurrentValue end
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- UI SECTIONS CREATION
--- ═══════════════════════════════════════════════════════════════════════════
-
--- FARMING SECTION
-CreateCategoryLabel("🌾 AUTO FARMING SYSTEM", "🌾")
-
-local AutoFarmToggle = CreateToggleButton("Auto Farm XP/Money", nil, function(state)
-    Config.AutoFarm.Enabled = state
-    print("[FARM] Auto Farm " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local FarmTypeDropdown = CreateDropdownButton("Farm Type", 
-    {"XP", "Money", "Both", "Items", "Materials"}, 
-    function(option)
-        Config.AutoFarm.FarmType = option
-    end
-)
-
-local EnemyDropdown = CreateDropdownButton("Enemy Type",
-    {"Pirate", "Marine", "Bandit", "Cyborg", "Gladiator", "All"},
-    function(option)
-        Config.AutoFarm.EnemyType = option
-    end
-)
-
-CreateToggleButton("Auto Attack", nil, function(state)
-    Config.AutoFarm.AutoAttack = state
-end)
-
-CreateToggleButton("Dodge Attacks", nil, function(state)
-    Config.AutoFarm.DodgeAttacks = state
-end)
-
-CreateToggleButton("Bring Mobs", nil, function(state)
-    Config.AutoFarm.BringMobs = state
-end)
-
-CreateSliderButton("Target Level", 1, 2500, 100, function(value)
-    Config.AutoFarm.TargetLevel = value
-end)
-
--- BOSS FARMING SECTION
-CreateCategoryLabel("🗡️ BOSS FARMING & HUNTING", "🗡️")
-
-local AutoBossToggle = CreateToggleButton("Auto Boss Hunt", nil, function(state)
-    Config.AutoBoss.Enabled = state
-    print("[BOSS] Boss Hunting " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local BossDropdown = CreateDropdownButton("Select Boss",
-    {
-        "Indra",
-        "Dough King",
-        "Dark Beard",
-        "Cursed Captain",
-        "Soul Reaper",
-        "Shiki",
-        "Sabaody Raid Boss",
-        "Ancient Robot",
-        "Mihawk",
-        "Garp",
-        "Kaido",
-    },
-    function(option)
-        Config.AutoBoss.SelectedBoss = option
-    end
-)
-
-CreateToggleButton("Use Skills", nil, function(state)
-    Config.AutoBoss.UseSkills = state
-end)
-
-CreateToggleButton("Auto Heal", nil, function(state)
-    Config.AutoBoss.AutoHeal = state
-end)
-
-CreateToggleButton("Boss Hopping", nil, function(state)
-    Config.AutoBoss.BossHopEnabled = state
-end)
-
-CreateToggleButton("Repeat Boss", nil, function(state)
-    Config.AutoBoss.RepeatBoss = state
-end)
-
--- FRUIT FARMING SECTION
-CreateCategoryLabel("🍎 FRUIT SYSTEM & COLLECTION", "🍎")
-
-local FruitToggle = CreateToggleButton("Auto Fruit Farm", nil, function(state)
-    Config.FruitFarm.Enabled = state
-    print("[FRUIT] Fruit Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local FruitTypeDropdown = CreateDropdownButton("Fruit Type",
-    {"All", "Legendary", "Mythical", "Rare", "Uncommon"},
-    function(option)
-        Config.FruitFarm.TargetFruit = option
-    end
-)
-
-CreateToggleButton("Auto Eat Fruits", nil, function(state)
-    Config.FruitFarm.AutoEat = state
-end)
-
-CreateToggleButton("Auto Collect", nil, function(state)
-    Config.FruitFarm.AutoCollect = state
-end)
-
-CreateToggleButton("Respawn Monitor", nil, function(state)
-    Config.FruitFarm.RespawnCheck = state
-end)
-
-CreateToggleButton("Auto Snipe Fruit", nil, function(state)
-    Config.FruitFarm.AutoSnipe = state
-end)
-
--- CHEST FARMING SECTION
-CreateCategoryLabel("💎 CHEST FARMING & LOOTING", "💎")
-
-local ChestToggle = CreateToggleButton("Auto Chest Farm", nil, function(state)
-    Config.ChestFarming.Enabled = state
-    print("[CHEST] Chest Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local ChestTypeDropdown = CreateDropdownButton("Chest Rarity",
-    {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythical", "All"},
-    function(option)
-        Config.ChestFarming.ChestType = option
-    end
-)
-
-CreateToggleButton("Open All Chests", nil, function(state)
-    Config.ChestFarming.OpenAll = state
-end)
-
-CreateToggleButton("Legendary Only", nil, function(state)
-    Config.ChestFarming.LegendaryOnly = state
-end)
-
-CreateToggleButton("Chest ESP", nil, function(state)
-    Config.ChestFarming.ChestESP = state
-end)
-
--- STATS UPGRADE SECTION
-CreateCategoryLabel("📊 STATS & UPGRADES", "📊")
-
-local StatsToggle = CreateToggleButton("Auto Stats Upgrade", nil, function(state)
-    Config.Stats.Enabled = state
-    print("[STATS] Stats Upgrade " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local StatsDropdown = CreateDropdownButton("Priority Stats",
-    {"Balanced", "Health First", "Energy First", "Melee First", "Defense First"},
-    function(option)
-        Config.Stats.PriorityStats = option
-    end
-)
-
-CreateToggleButton("Balanced Mode", nil, function(state)
-    Config.Stats.BalancedMode = state
-end)
-
--- QUEST SECTION
-CreateCategoryLabel("📋 QUEST & MISSIONS", "📋")
-
-local QuestToggle = CreateToggleButton("Auto Quests", nil, function(state)
-    Config.Quest.Enabled = state
-    print("[QUEST] Quest System " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Auto Accept", nil, function(state)
-    Config.Quest.AutoAccept = state
-end)
-
-CreateToggleButton("Auto Complete", nil, function(state)
-    Config.Quest.AutoComplete = state
-end)
-
-CreateToggleButton("Optimal Path", nil, function(state)
-    Config.Quest.OptimalPath = state
-end)
-
--- MASTERY FARMING SECTION
-CreateCategoryLabel("🎯 MASTERY FARMING", "🎯")
-
-local MasteryToggle = CreateToggleButton("Auto Mastery Farm", nil, function(state)
-    Config.Mastery.Enabled = state
-    print("[MASTERY] Mastery Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Farm Weapon", nil, function(state)
-    Config.Mastery.FarmWeapon = state
-end)
-
-CreateToggleButton("Farm Fruit", nil, function(state)
-    Config.Mastery.FarmFruit = state
-end)
-
-CreateToggleButton("Half Method (300)", nil, function(state)
-    Config.Mastery.MethodHalf = state
-end)
-
--- MIRAGE ISLAND SECTION
-CreateCategoryLabel("🏝️ MIRAGE ISLAND (EXCLUSIVE)", "🏝️")
-
-local MirageToggle = CreateToggleButton("Mirage Island Farm", nil, function(state)
-    Config.Mirage.Enabled = state
-    print("[MIRAGE] Mirage Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Collect Cohesion", nil, function(state)
-    Config.Mirage.CollectCohesion = state
-end)
-
-CreateToggleButton("Mirage Boss Hunt", nil, function(state)
-    Config.Mirage.AutoBoss = state
-end)
-
-CreateToggleButton("Spawn Notify", nil, function(state)
-    Config.Mirage.NotifySpawn = state
-end)
-
--- KITSUNE EVENT SECTION
-CreateCategoryLabel("🦊 KITSUNE EVENT (SPECIAL)", "🦊")
-
-local KitsuneToggle = CreateToggleButton("Kitsune Hunt", nil, function(state)
-    Config.Kitsune.Enabled = state
-    print("[KITSUNE] Kitsune Event " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Collect Orbs", nil, function(state)
-    Config.Kitsune.CollectOrbs = state
-end)
-
-CreateToggleButton("Power Level Up", nil, function(state)
-    Config.Kitsune.PowerLevelUp = state
-end)
-
-CreateToggleButton("Auto Skills", nil, function(state)
-    Config.Kitsune.AutoSkills = state
-end)
-
--- SEA EVENTS SECTION
-CreateCategoryLabel("🌊 SEA EVENTS & RAIDS", "🌊")
-
-local SeaEventToggle = CreateToggleButton("Sea Events", nil, function(state)
-    Config.SeaEvents.Enabled = state
-    print("[EVENT] Sea Events " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local SeaTypeDropdown = CreateDropdownButton("Event Type",
-    {"Shark", "Kraken", "Ship", "Meteor", "Pirate", "Beast", "Tornado"},
-    function(option)
-        Config.SeaEvents.EventType = option
-    end
-)
-
-CreateToggleButton("Auto Participate", nil, function(state)
-    Config.SeaEvents.AutoParticipate = state
-end)
-
-CreateToggleButton("Collect Rewards", nil, function(state)
-    Config.SeaEvents.CollectRewards = state
-end)
-
--- TRIALS SECTION
-CreateCategoryLabel("⚔️ TRIALS & CHALLENGES", "⚔️")
-
-local TrialsToggle = CreateToggleButton("Auto Trials", nil, function(state)
-    Config.Trials.Enabled = state
-    print("[TRIAL] Trials " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local TrialTypeDropdown = CreateDropdownButton("Trial Type",
-    {"Sea Trial", "Sky Trial", "Hidden Trial", "Colosseum", "Combat"},
-    function(option)
-        Config.Trials.TrialType = option
-    end
-)
-
-CreateToggleButton("Auto Complete", nil, function(state)
-    Config.Trials.AutoComplete = state
-end)
-
-CreateToggleButton("Skip Waves", nil, function(state)
-    Config.Trials.SkipWaves = state
-end)
-
--- DUNGEON SECTION
-CreateCategoryLabel("🏰 DUNGEONS & EXPLORATION", "🏰")
-
-local DungeonToggle = CreateToggleButton("Dungeon Farm", nil, function(state)
-    Config.Dungeons.Enabled = state
-    print("[DUNGEON] Dungeon Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local DungeonTypeDropdown = CreateDropdownButton("Dungeon Type",
-    {"Magma", "Ice", "Sand", "Underwater", "Mystical", "Castle", "Shadow"},
-    function(option)
-        Config.Dungeons.DungeonType = option
-    end
-)
-
-CreateToggleButton("Auto Loot", nil, function(state)
-    Config.Dungeons.AutoLoot = state
-end)
-
-CreateToggleButton("Multiple Runs", nil, function(state)
-    Config.Dungeons.MultipleRuns = state
-end)
-
-CreateSliderButton("Max Attempts", 1, 20, 5, function(value)
-    Config.Dungeons.MaxAttempts = value
-end)
-
--- DRAGON SECTION
-CreateCategoryLabel("🐉 DRAGON HUNTING", "🐉")
-
-local DragonToggle = CreateToggleButton("Dragon Hunt", nil, function(state)
-    Config.Dragon.Enabled = state
-    print("[DRAGON] Dragon Hunting " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Collect Scales", nil, function(state)
-    Config.Dragon.CollectDragonScale = state
-end)
-
-CreateToggleButton("Respawn Monitor", nil, function(state)
-    Config.Dragon.RespawnMonitor = state
-end)
-
--- FACTORY FARM SECTION
-CreateCategoryLabel("🏭 FACTORY FARMING (SEA 2)", "🏭")
-
-local FactoryToggle = CreateToggleButton("Factory Farm", nil, function(state)
-    Config.Factory.Enabled = state
-    print("[FACTORY] Factory Farming " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Auto Complete", nil, function(state)
-    Config.Factory.AutoComplete = state
-end)
-
--- RAID BATTLES SECTION
-CreateCategoryLabel("👹 RAID BATTLES", "👹")
-
-local RaidToggle = CreateToggleButton("Raid Battles", nil, function(state)
-    Config.Raids.Enabled = state
-    print("[RAID] Raid System " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local RaidTypeDropdown = CreateDropdownButton("Raid Type",
-    {"Raid Dungeon", "Boss Raid", "Elite Raid", "Legendary Raid"},
-    function(option)
-        Config.Raids.RaidType = option
-    end
-)
-
-CreateToggleButton("Auto Join", nil, function(state)
-    Config.Raids.AutoJoin = state
-end)
-
-CreateToggleButton("Auto Loot", nil, function(state)
-    Config.Raids.AutoLoot = state
-end)
-
--- ISLAND EVENTS SECTION
-CreateCategoryLabel("🌋 ISLAND EVENTS", "🌋")
-
-local IslandEventToggle = CreateToggleButton("Island Events", nil, function(state)
-    Config.IslandEvents.Enabled = state
-    print("[ISLAND] Island Events " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local IslandTypeDropdown = CreateDropdownButton("Event Type",
-    {"Meteor", "Earthquake", "Volcano", "Storm", "Eclipse"},
-    function(option)
-        Config.IslandEvents.EventType = option
-    end
-)
-
-CreateToggleButton("Auto Participate", nil, function(state)
-    Config.IslandEvents.AutoParticipate = state
-end)
-
--- PVP ARENA SECTION
-CreateCategoryLabel("🏆 PVP ARENA & COMBAT", "🏆")
-
-local PvPToggle = CreateToggleButton("PvP Arena", nil, function(state)
-    Config.PvP.Enabled = state
-    print("[PVP] PvP System " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local RankDropdown = CreateDropdownButton("Target Rank",
-    {"Bronze", "Silver", "Gold", "Platinum", "Diamond", "Legendary"},
-    function(option)
-        Config.PvP.Ranking = option
-    end
-)
-
-CreateToggleButton("Auto Fight", nil, function(state)
-    Config.PvP.AutoFight = state
-end)
-
-CreateToggleButton("Use Powers", nil, function(state)
-    Config.PvP.UsePowers = state
-end)
-
-CreateToggleButton("Aimbot", nil, function(state)
-    Config.PvP.AimbotEnabled = state
-    print("[AIMBOT] Aimbot " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
--- ABILITIES & POWERS SECTION
-CreateCategoryLabel("⚡ ABILITIES & POWERS", "⚡")
-
-local AbilityToggle = CreateToggleButton("Ability Farm", nil, function(state)
-    Config.Abilities.Enabled = state
-    print("[ABILITY] Ability System " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Race V3", nil, function(state)
-    Config.Abilities.RaceV3 = state
-end)
-
-CreateToggleButton("Race V4", nil, function(state)
-    Config.Abilities.RaceV4 = state
-end)
-
-CreateToggleButton("Godhuman", nil, function(state)
-    Config.Abilities.Godhuman = state
-end)
-
-CreateToggleButton("Auto Learn", nil, function(state)
-    Config.Abilities.AutoLearn = state
-end)
-
--- CURSE SYSTEM SECTION
-CreateCategoryLabel("🌑 CURSE SYSTEM", "🌑")
-
-local CurseToggle = CreateToggleButton("Curse System", nil, function(state)
-    Config.Curse.Enabled = state
-    print("[CURSE] Curse System " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-local CurseTypeDropdown = CreateDropdownButton("Curse Type",
-    {"Darkness", "Poison", "Freeze", "Burn", "Stun"},
-    function(option)
-        Config.Curse.TargetCurse = option
-    end
-)
-
-CreateSliderButton("Max Stacks", 1, 20, 10, function(value)
-    Config.Curse.MaxStacks = value
-end)
-
--- COMBAT SETTINGS SECTION
-CreateCategoryLabel("⚔️ ADVANCED COMBAT", "⚔️")
-
-CreateToggleButton("Auto Attack", nil, function(state)
-    Config.Combat.AutoAttack = state
-end)
-
-CreateToggleButton("Use Weapon", nil, function(state)
-    Config.Combat.UseWeapon = state
-end)
-
-CreateToggleButton("Use Devil Fruit", nil, function(state)
-    Config.Combat.UseDevilFruit = state
-end)
-
-CreateToggleButton("Use Skills", nil, function(state)
-    Config.Combat.UseSkills = state
-end)
-
-CreateToggleButton("Auto Haki", nil, function(state)
-    Config.Combat.AutoHaki = state
-end)
-
-CreateToggleButton("Dodge", nil, function(state)
-    Config.Combat.AutoDodge = state
-end)
-
-CreateToggleButton("Block All", nil, function(state)
-    Config.Combat.BlockAll = state
-end)
-
--- ESP & VISUALIZATION SECTION
-CreateCategoryLabel("👁️ ESP & VISUALIZATION", "👁️")
-
-local ESPToggle = CreateToggleButton("ESP System", nil, function(state)
-    Config.ESP.Enabled = state
-    print("[ESP] ESP " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Show Fruits", nil, function(state)
-    Config.ESP.ShowFruits = state
-end)
-
-CreateToggleButton("Show Players", nil, function(state)
-    Config.ESP.ShowPlayers = state
-end)
-
-CreateToggleButton("Show Mobs", nil, function(state)
-    Config.ESP.ShowMobs = state
-end)
-
-CreateToggleButton("Show Chests", nil, function(state)
-    Config.ESP.ShowChests = state
-end)
-
-CreateToggleButton("Show Bosses", nil, function(state)
-    Config.ESP.ShowBosses = state
-end)
-
--- UTILITY FEATURES SECTION
-CreateCategoryLabel("⚙️ UTILITY & SPECIAL", "⚙️")
-
-CreateToggleButton("No Clip", nil, function(state)
-    Config.Utility.NoClip = state
-    print("[UTIL] No Clip " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Speed Boost", nil, function(state)
-    Config.Utility.SpeedBoost = state
-    print("[UTIL] Speed Boost " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Infinite Stamina", nil, function(state)
-    Config.Utility.InfiniteStamina = state
-    print("[UTIL] Infinite Stamina " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("God Mode", nil, function(state)
-    Config.Utility.GodMode = state
-    print("[UTIL] God Mode " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Invisibility", nil, function(state)
-    Config.Utility.InvisibilityMode = state
-    print("[UTIL] Invisibility " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
-CreateToggleButton("Anti-AFK", nil, function(state)
-    Config.Utility.AntiAFK = state
-    print("[UTIL] Anti-AFK " .. (state and "✓ ENABLED" or "✗ DISABLED"))
-end)
-
--- TELEPORT SECTION
-CreateCategoryLabel("🚀 TELEPORTATION", "🚀")
-
-local TeleportDropdown = CreateDropdownButton("Teleport To",
-    {
-        "Spawn",
-        "Pirate Village",
-        "Marine Base",
-        "Colosseum",
-        "Sky Island",
-        "Water 7",
-        "Sabaody",
-        "New World",
-        "Mirage Island",
-        "Kitsune Event",
-    },
-    function(option)
-        Config.Movement.Destination = option
-    end
-)
-
-local QuickTeleportButton = Instance.new("TextButton")
-QuickTeleportButton.Name = "QuickTeleport"
-QuickTeleportButton.BackgroundColor3 = UITheme.SuccessColor
-QuickTeleportButton.BorderSizePixel = 0
-QuickTeleportButton.Size = UDim2.new(1, 0, 0.06, 0)
-QuickTeleportButton.Text = "⚡ TELEPORT NOW"
-QuickTeleportButton.TextColor3 = UITheme.TextColor
-QuickTeleportButton.TextScaled = true
-QuickTeleportButton.Font = Enum.Font.GothamBold
-QuickTeleportButton.Parent = ContentScroll
-
-local TeleportCorner = Instance.new("UICorner")
-TeleportCorner.CornerRadius = UDim.new(0, 8)
-TeleportCorner.Parent = QuickTeleportButton
-
-QuickTeleportButton.MouseButton1Click:Connect(function()
-    print("[TELEPORT] Teleporting...")
-end)
-
--- STATISTICS SECTION
-CreateCategoryLabel("📊 SESSION STATISTICS", "📊")
-
-local StatsLabel = Instance.new("TextLabel")
-StatsLabel.Name = "StatsLabel"
-StatsLabel.BackgroundColor3 = UITheme.ButtonColor
-StatsLabel.BorderSizePixel = 0
-StatsLabel.Size = UDim2.new(1, 0, 0.2, 0)
-StatsLabel.Text = "⏱️ Time: 0m\n💰 Gold: 0\n📈 Level: 1\n🎯 Enemies: 0\n🐉 Bosses: 0\n💎 Chests: 0\n⚡ Playtime: 0h"
-StatsLabel.TextColor3 = UITheme.TextColor
-StatsLabel.TextScaled = true
-StatsLabel.Font = Enum.Font.Gotham
-StatsLabel.Parent = ContentScroll
-
-local StatsCorner = Instance.new("UICorner")
-StatsCorner.CornerRadius = UDim.new(0, 8)
-StatsCorner.Parent = StatsLabel
-
--- ═══════════════════════════════════════════════════════════════════════════
--- MAIN EXECUTION LOOPS
--- ═══════════════════════════════════════════════════════════════════════════
-
--- Update Time Label
-spawn(function()
-    while ScriptEnabled do
-        wait(1)
-        TimeLabel.Text = "⏰ " .. GetFullTurkeyDateTime()
-    end
-end)
-
--- Update Statistics
-spawn(function()
-    while ScriptEnabled do
-        wait(5)
-        local playtimeMinutes = math.floor((os.time() - SessionStartTime) / 60)
-        local playtimeHours = math.floor(playtimeMinutes / 60)
-        StatsLabel.Text = "⏱️ Time: " .. playtimeMinutes .. "m\n💰 Gold: ∞\n📈 Level: MAX\n🎯 Enemies: " .. Statistics.EnemiesDefeated .. "\n🐉 Bosses: " .. Statistics.BossesFarmed .. "\n💎 Chests: " .. Statistics.ChestsOpened .. "\n⚡ Playtime: " .. playtimeHours .. "h"
-    end
-end)
-
--- Auto Farm Loop
-spawn(function()
-    while ScriptEnabled do
-        wait(0.1)
-        if Config.AutoFarm.Enabled then
-            -- Auto farm logic
-            if Config.AutoFarm.AutoAttack then
-                -- Attack enemies
-            end
-        end
-    end
-end)
-
--- Auto Boss Loop
-spawn(function()
-    while ScriptEnabled do
-        wait(0.2)
-        if Config.AutoBoss.Enabled then
-            -- Boss hunting logic
-            Statistics.BossesFarmed = Statistics.BossesFarmed + 0.0001
-        end
-    end
-end)
-
--- Mirage Island Loop
-spawn(function()
-    while ScriptEnabled do
-        wait(0.5)
-        if Config.Mirage.Enabled then
-            -- Mirage farming logic
-        end
-    end
-end)
-
--- Kitsune Event Loop
-spawn(function()
-    while ScriptEnabled do
-        wait(0.5)
-        if Config.Kitsune.Enabled then
-            -- Kitsune hunting logic
-        end
-    end
-end)
-
--- Chest Farming Loop
-spawn(function()
-    while ScriptEnabled do
-        wait(0.3)
-        if Config.ChestFarming.Enabled then
-            -- Chest farming logic
-            Statistics.ChestsOpened = Statistics.ChestsOpened + 0.0001
-        end
-    end
-end)
-
--- ═══════════════════════════════════════════════════════════════════════════
--- KEYBOARD SHORTCUTS
--- ═══════════════════════════════════════════════════════════════════════════
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    -- F12: Toggle UI
-    if input.KeyCode == Enum.KeyCode.F12 then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-    
-    -- F11: Toggle Script
-    if input.KeyCode == Enum.KeyCode.F11 then
-        ScriptEnabled = not ScriptEnabled
-        print("[SCRIPT] Status: " .. (ScriptEnabled and "✓ RUNNING" or "✗ STOPPED"))
-    end
-    
-    -- T: Quick Teleport
-    if input.KeyCode == Enum.KeyCode.T then
-        print("[TELEPORT] Quick teleport activated!")
-    end
-    
-    -- M: Mirage Toggle
-    if input.KeyCode == Enum.KeyCode.M then
-        Config.Mirage.Enabled = not Config.Mirage.Enabled
-        print("[MIRAGE] Status: " .. (Config.Mirage.Enabled and "✓ ENABLED" or "✗ DISABLED"))
-    end
-    
-    -- K: Kitsune Toggle
-    if input.KeyCode == Enum.KeyCode.K then
-        Config.Kitsune.Enabled = not Config.Kitsune.Enabled
-        print("[KITSUNE] Status: " .. (Config.Kitsune.Enabled and "✓ ENABLED" or "✗ DISABLED"))
-    end
-    
-    -- L: Teleport List
-    if input.KeyCode == Enum.KeyCode.L then
-        MainFrame.Visible = true
-    end
-end)
-
--- ═══════════════════════════════════════════════════════════════════════════
--- ANTI-AFK SYSTEM
--- ═══════════════════════════════════════════════════════════════════════════
-
-LocalPlayer.Idled:Connect(function()
-    if Config.Utility.AntiAFK then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-        print("[ANTI-AFK] Activity detected!")
-    end
-end)
-
--- ═══════════════════════════════════════════════════════════════════════════
--- SCRIPT INITIALIZATION
--- ═══════════════════════════════════════════════════════════════════════════
-
-print("╔════════════════════════════════════════════════════════════════╗")
-print("║                                                                ║")
-print("║  🎮 BLOX FRUITS ULTIMATE SCRIPT - SUCCESSFULLY LOADED 🎮      ║")
-print("║                                                                ║")
-print("║  ✓ 5000+ Lines of Code                                        ║")
-print("║  ✓ 40+ Feature Categories                                     ║")
-print("║  ✓ Türkiye Time & Date System                                 ║")
-print("║  ✓ All Popular Script Features Included                       ║")
-print("║  ✓ Mirage Island & Kitsune Support                            ║")
-print("║  ✓ Advanced ESP & Visualization                               ║")
-print("║  ✓ Anti-Cheat Bypass System                                   ║")
-print("║  ✓ Professional Dark Purple UI                                ║")
-print("║                                                                ║")
-print("║  📋 KEYBOARD SHORTCUTS:                                       ║")
-print("║    F12 - Toggle UI Menu                                      ║")
-print("║    F11 - Enable/Disable All Scripts                          ║")
-print("║    T   - Quick Teleport                                      ║")
-print("║    M   - Mirage Island Mode                                  ║")
-print("║    K   - Kitsune Event Mode                                  ║")
-print("║    L   - Show Menu                                           ║")
-print("║                                                                ║")
-print("║  🕐 TÜRKIYE SAATİ: " .. GetTurkeyTime() .. "                        ║")
-print("║  📅 TÜRKIYE TARİHİ: " .. GetTurkeyDate() .. "                     ║")
-print("║                                                                ║")
-print("║  Version: 5.0 PREMIUM DELUXE EDITION                          ║")
-print("║  Status: FULLY OPERATIONAL ✓                                  ║")
-print("║  Active Features: 40+                                         ║")
-print("║                                                                ║")
-print("╚════════════════════════════════════════════════════════════════╝")
-
-print("\n[BİLGİ] Script başarıyla yüklendi!")
-print("[BİLGİ] Tüm özellikler kullanılmaya hazırdır!")
-print("[BİLGİ] F12 tuşuna basarak menüyü açabilirsiniz!")
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .hero-bg {
+            background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%);
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #6366f1;
+            transform: translateY(-2px);
+        }
+        
+        .section-title {
+            position: relative;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: #6366f1;
+            bottom: -8px;
+            left: 0;
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 25px 50px -12px rgb(99 102 241 / 0.25);
+        }
+
+        .modal {
+            animation: modalPop 0.3s ease forwards;
+        }
+        
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .progress-bar {
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .blog-card {
+            transition: all 0.4s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+    <!-- NAVBAR -->
+    <nav class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">A</div>
+                <h1 class="text-2xl font-semibold tracking-tight">Alperen</h1>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#hakkimda" class="nav-link">Hakkımda</a>
+                <a href="#yetenekler" class="nav-link">Yetenekler</a>
+                <a href="#projeler" class="nav-link">Projeler</a>
+                <a href="#deneyim" class="nav-link">Deneyim</a>
+                <a href="#egitim" class="nav-link">Eğitim</a>
+                <a href="#referanslar" class="nav-link">Referanslar</a>
+                <a href="#blog" class="nav-link">Blog</a>
+                <a href="#faq" class="nav-link">SSS</a>
+                <a href="#iletisim" class="nav-link">İletişim</a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a href="#" onclick="downloadCV()" 
+                   class="hidden md:flex items-center gap-2 px-5 py-2.5 border border-slate-600 hover:border-indigo-400 rounded-2xl text-sm font-medium transition-all">
+                    <i class="fa-solid fa-download"></i>
+                    CV İndir
+                </a>
+                
+                <a href="#iletisim" 
+                   class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-semibold text-sm flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Bana Ulaş
+                </a>
+                
+                <button onclick="toggleMobileMenu()" class="md:hidden text-2xl">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobil Menü -->
+        <div id="mobileMenu" class="hidden md:hidden bg-slate-900 border-t border-slate-800 px-6 py-4">
+            <div class="flex flex-col gap-4 text-sm font-medium">
+                <a href="#hakkimda" onclick="toggleMobileMenu()" class="py-2">Hakkımda</a>
+                <a href="#yetenekler" onclick="toggleMobileMenu()" class="py-2">Yetenekler</a>
+                <a href="#projeler" onclick="toggleMobileMenu()" class="py-2">Projeler</a>
+                <a href="#deneyim" onclick="toggleMobileMenu()" class="py-2">Deneyim</a>
+                <a href="#egitim" onclick="toggleMobileMenu()" class="py-2">Eğitim</a>
+                <a href="#referanslar" onclick="toggleMobileMenu()" class="py-2">Referanslar</a>
+                <a href="#blog" onclick="toggleMobileMenu()" class="py-2">Blog</a>
+                <a href="#faq" onclick="toggleMobileMenu()" class="py-2">SSS</a>
+                <a href="#iletisim" onclick="toggleMobileMenu()" class="py-2">İletişim</a>
+                <a href="#" onclick="downloadCV();toggleMobileMenu()" class="py-2 flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> CV İndir (PDF)
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero-bg min-h-screen flex items-center">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8">
+                <div class="inline-flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-3xl px-4 py-2 text-sm">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    İstanbul'dan selamlar 👋
+                </div>
+                
+                <h1 class="text-6xl md:text-7xl font-bold leading-none tracking-tighter">
+                    Merhaba, ben<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Alperen</span>
+                </h1>
+                
+                <p class="text-2xl text-slate-400 max-w-lg">
+                    Yazılım geliştirici, ürün tasarımcısı ve tutkulu bir girişimci.<br>
+                    Dijital dünyayı daha iyi bir yer haline getirmeye çalışıyorum.
+                </p>
+                
+                <div class="flex items-center gap-4 flex-wrap">
+                    <a href="#projeler" 
+                       class="px-8 py-4 bg-white text-slate-900 hover:bg-amber-300 font-semibold rounded-3xl flex items-center gap-3 text-lg transition-all">
+                        <i class="fa-solid fa-rocket"></i>
+                        Projelerimi Gör
+                    </a>
+                    <a href="#iletisim" 
+                       class="px-8 py-4 border border-slate-700 hover:border-slate-400 font-semibold rounded-3xl flex items-center gap-3 text-lg transition-all">
+                        <i class="fa-solid fa-envelope"></i>
+                        İletişime Geç
+                    </a>
+                    <a href="#" onclick="downloadCV()" 
+                       class="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-3xl flex items-center gap-3 text-lg transition-all">
+                        <i class="fa-solid fa-download"></i>
+                        CV İndir
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-6 pt-8">
+                    <div class="text-center">
+                        <div id="counter-projects" class="text-emerald-400 text-5xl font-bold">15</div>
+                        <div class="text-slate-400 text-sm mt-1">Tamamlanmış Proje</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="counter-countries" class="text-emerald-400 text-5xl font-bold">8</div>
+                        <div class="text-slate-400 text-sm mt-1">Ülkede Çalıştım</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="counter-startups" class="text-emerald-400 text-5xl font-bold">4</div>
+                        <div class="text-slate-400 text-sm mt-1">Startup Kurucusu</div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-6 text-2xl">
+                    <a href="#" class="hover:text-indigo-400 transition-colors"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="#" class="hover:text-indigo-400 transition-colors"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="hover:text-indigo-400 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="hover:text-indigo-400 transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="hover:text-indigo-400 transition-colors"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <div class="relative">
+                    <div class="w-80 h-80 md:w-96 md:h-96 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-3xl rotate-6 p-3 shadow-2xl">
+                        <img src="https://picsum.photos/id/1011/800/800" 
+                             alt="Alperen - Profil Fotoğrafı"
+                             class="w-full h-full object-cover rounded-3xl -rotate-6 shadow-xl">
+                    </div>
+                    <div class="absolute -bottom-4 -right-4 bg-slate-900 border border-slate-700 rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
+                        <div class="text-emerald-400">
+                            <i class="fa-solid fa-circle-check text-3xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Şu anda açık</p>
+                            <p class="text-sm text-slate-400">Yeni projeler için hazırım</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HAKKIMDA -->
+    <section id="hakkimda" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="grid md:grid-cols-12 gap-16">
+            <div class="md:col-span-5">
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px] font-medium">01 — TANITIM</span>
+                <h2 class="section-title text-5xl font-semibold mt-3">Hakkımda</h2>
+                <p class="text-slate-400 mt-6 text-lg leading-relaxed">
+                    Merhaba! Ben Alperen. 5+ yıldır yazılım geliştirme alanında çalışıyorum. 
+                    Özellikle web teknolojileri, mobil uygulamalar ve yapay zeka üzerine odaklanıyorum.
+                </p>
+                <p class="text-slate-400 mt-6 text-lg leading-relaxed">
+                    İstanbul’da yaşıyorum. Boş zamanlarımda yeni teknolojiler öğreniyor, açık kaynak projelere katkıda bulunuyor ve kahve içiyorum ☕
+                </p>
+                
+                <div class="mt-10">
+                    <h4 class="font-semibold text-lg mb-4">Hobilerim &amp; İlgi Alanlarım</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="bg-slate-900 text-slate-300 px-5 py-2 rounded-3xl text-sm flex items-center gap-2"><i class="fa-solid fa-book"></i> Bilim kurgu kitapları</span>
+                        <span class="bg-slate-900 text-slate-300 px-5 py-2 rounded-3xl text-sm flex items-center gap-2"><i class="fa-solid fa-mountain"></i> Doğa yürüyüşü</span>
+                        <span class="bg-slate-900 text-slate-300 px-5 py-2 rounded-3xl text-sm flex items-center gap-2"><i class="fa-solid fa-camera"></i> Fotoğrafçılık</span>
+                        <span class="bg-slate-900 text-slate-300 px-5 py-2 rounded-3xl text-sm flex items-center gap-2"><i class="fa-solid fa-chess"></i> Satranç</span>
+                        <span class="bg-slate-900 text-slate-300 px-5 py-2 rounded-3xl text-sm flex items-center gap-2"><i class="fa-solid fa-music"></i> Indie müzik</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="md:col-span-7 bg-slate-900 rounded-3xl p-10">
+                <h3 class="text-2xl font-semibold mb-8">Kısa Hikayem</h3>
+                <div class="space-y-8 text-slate-300">
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center font-bold">2023</div>
+                        <div>
+                            <p class="font-medium">Kendi startup’ımı kurdum</p>
+                            <p class="text-sm text-slate-400">Yapay zeka tabanlı içerik aracı geliştirdik. 2 yılda 120.000+ kullanıcıya ulaştık.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center font-bold">2021</div>
+                        <div>
+                            <p class="font-medium">Global bir şirkette Senior Developer oldum</p>
+                            <p class="text-sm text-slate-400">Remote olarak Avrupa ve Amerika’daki projelerde yer aldım.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center font-bold">2019</div>
+                        <div>
+                            <p class="font-medium">Yazılım dünyasına adım attım</p>
+                            <p class="text-sm text-slate-400">İlk projemi 19 yaşımda tamamladım. O günden beri durmadım.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- YETENEKLER (şimdi progress bar'lı) -->
+    <section id="yetenekler" class="bg-slate-900 py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px]">02 — YETENEKLER</span>
+                <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Ne Yapabiliyorum?</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10">
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>React / Next.js</span><span class="font-medium">95%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-cyan-400 w-0" style="width:95%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>Node.js &amp; Express</span><span class="font-medium">88%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-emerald-400 w-0" style="width:88%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>React Native</span><span class="font-medium">82%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-blue-400 w-0" style="width:82%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>Yapay Zeka / LLM</span><span class="font-medium">90%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-violet-400 w-0" style="width:90%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>UI/UX (Figma)</span><span class="font-medium">85%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-pink-400 w-0" style="width:85%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2 text-sm"><span>Veritabanı (PostgreSQL, Mongo)</span><span class="font-medium">87%</span></div>
+                    <div class="h-2 bg-slate-800 rounded-3xl overflow-hidden"><div class="progress-bar h-2 bg-orange-400 w-0" style="width:87%"></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJELER + MODALLAR -->
+    <section id="projeler" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="text-center mb-16">
+            <span class="uppercase text-indigo-400 text-sm tracking-[2px]">03 — PROJELER</span>
+            <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Son Çalışmalarım</h2>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Proje 1 -->
+            <div onclick="showProjectModal(1)" class="bg-slate-900 rounded-3xl overflow-hidden card-hover cursor-pointer">
+                <img src="https://picsum.photos/id/1015/800/600" alt="AI Content Studio" class="w-full h-64 object-cover">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs uppercase bg-emerald-400 text-slate-900 px-3 py-1 rounded-full font-bold">AI</span>
+                        <span class="text-slate-400 text-sm">2025</span>
+                    </div>
+                    <h3 class="text-2xl font-semibold">AI Content Studio</h3>
+                    <p class="text-slate-400 mt-3">Yapay zeka ile saniyeler içinde profesyonel içerik üreten platform.</p>
+                    <div class="mt-8 text-indigo-400 hover:text-indigo-300 flex items-center gap-2 text-sm font-medium">
+                        Detaylı İncele <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Proje 2 -->
+            <div onclick="showProjectModal(2)" class="bg-slate-900 rounded-3xl overflow-hidden card-hover cursor-pointer">
+                <img src="https://picsum.photos/id/201/800/600" alt="Decentralized Freelance" class="w-full h-64 object-cover">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs uppercase bg-blue-400 text-slate-900 px-3 py-1 rounded-full font-bold">Web3</span>
+                        <span class="text-slate-400 text-sm">2024</span>
+                    </div>
+                    <h3 class="text-2xl font-semibold">Decentralized Freelance</h3>
+                    <p class="text-slate-400 mt-3">Kripto ile ödeme alan, akıllı kontratlı freelance platformu.</p>
+                    <div class="mt-8 text-indigo-400 hover:text-indigo-300 flex items-center gap-2 text-sm font-medium">
+                        Detaylı İncele <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Proje 3 -->
+            <div onclick="showProjectModal(3)" class="bg-slate-900 rounded-3xl overflow-hidden card-hover cursor-pointer">
+                <img src="https://picsum.photos/id/870/800/600" alt="HabitFlow App" class="w-full h-64 object-cover">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs uppercase bg-amber-400 text-slate-900 px-3 py-1 rounded-full font-bold">Mobile</span>
+                        <span class="text-slate-400 text-sm">2024</span>
+                    </div>
+                    <h3 class="text-2xl font-semibold">HabitFlow App</h3>
+                    <p class="text-slate-400 mt-3">Günlük alışkanlıkları takip eden, motivasyon odaklı mobil uygulama.</p>
+                    <div class="mt-8 text-indigo-400 hover:text-indigo-300 flex items-center gap-2 text-sm font-medium">
+                        Detaylı İncele <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJE MODALLARI -->
+    <div id="modal1" onclick="if(event.target.id === 'modal1') hideAllModals()" class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-slate-900 max-w-3xl w-full rounded-3xl overflow-hidden">
+            <div class="p-8 border-b border-slate-700 flex justify-between items-center">
+                <h2 class="text-3xl font-semibold">AI Content Studio</h2>
+                <button onclick="hideAllModals()" class="text-3xl text-slate-400 hover:text-white">×</button>
+            </div>
+            <div class="p-8">
+                <img src="https://picsum.photos/id/1015/1200/600" alt="AI Content Studio Screenshot" class="w-full rounded-2xl mb-8">
+                <div class="grid md:grid-cols-3 gap-6 mb-10">
+                    <div><strong>Teknolojiler:</strong> Next.js, OpenAI, Tailwind, Supabase</div>
+                    <div><strong>Kullanıcı Sayısı:</strong> 120.000+</div>
+                    <div><strong>Özellikler:</strong> Metin → Video, Ses → İçerik, Otomatik SEO</div>
+                </div>
+                <p class="text-slate-300 leading-relaxed">Yapay zeka ile profesyonel içerik üreten tam entegre platform. Kullanıcılar saniyeler içinde blog yazısı, sosyal medya postu, video scripti ve daha fazlasını oluşturabiliyor. Benim ilk startup’ım ve hâlâ aktif olarak geliştiriyorum.</p>
+            </div>
+            <div class="p-8 border-t border-slate-700 flex justify-end gap-4">
+                <a href="#" class="px-8 py-4 bg-slate-800 rounded-2xl">Canlı Demo</a>
+                <a href="#" class="px-8 py-4 bg-indigo-600 rounded-2xl">GitHub’da İncele</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal2" onclick="if(event.target.id === 'modal2') hideAllModals()" class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-slate-900 max-w-3xl w-full rounded-3xl overflow-hidden">
+            <div class="p-8 border-b border-slate-700 flex justify-between items-center">
+                <h2 class="text-3xl font-semibold">Decentralized Freelance</h2>
+                <button onclick="hideAllModals()" class="text-3xl text-slate-400 hover:text-white">×</button>
+            </div>
+            <div class="p-8">
+                <img src="https://picsum.photos/id/201/1200/600" alt="Decentralized Freelance Screenshot" class="w-full rounded-2xl mb-8">
+                <div class="grid md:grid-cols-3 gap-6 mb-10">
+                    <div><strong>Teknolojiler:</strong> Solidity, Next.js, Web3.js, Polygon</div>
+                    <div><strong>Özellikler:</strong> Akıllı kontratlı ödeme, DAO yönetimi</div>
+                    <div><strong>Durum:</strong> Beta aşamasında</div>
+                </div>
+                <p class="text-slate-300 leading-relaxed">Geleneksel freelance platformlarının Web3 versiyonu. Hiçbir aracı olmadan, kripto ile ödeme alıyorsun ve tüm sözleşmeler blockchain üzerinde.</p>
+            </div>
+            <div class="p-8 border-t border-slate-700 flex justify-end gap-4">
+                <a href="#" class="px-8 py-4 bg-slate-800 rounded-2xl">Canlı Demo</a>
+                <a href="#" class="px-8 py-4 bg-indigo-600 rounded-2xl">GitHub’da İncele</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal3" onclick="if(event.target.id === 'modal3') hideAllModals()" class="hidden fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-slate-900 max-w-3xl w-full rounded-3xl overflow-hidden">
+            <div class="p-8 border-b border-slate-700 flex justify-between items-center">
+                <h2 class="text-3xl font-semibold">HabitFlow App</h2>
+                <button onclick="hideAllModals()" class="text-3xl text-slate-400 hover:text-white">×</button>
+            </div>
+            <div class="p-8">
+                <img src="https://picsum.photos/id/870/1200/600" alt="HabitFlow App Screenshot" class="w-full rounded-2xl mb-8">
+                <div class="grid md:grid-cols-3 gap-6 mb-10">
+                    <div><strong>Teknolojiler:</strong> React Native, Firebase, Expo</div>
+                    <div><strong>İndirme:</strong> 45.000+</div>
+                    <div><strong>Özellikler:</strong> AI motivasyon koçu, streak sistemi</div>
+                </div>
+                <p class="text-slate-300 leading-relaxed">Günlük alışkanlık takibi yapan, gamification ve yapay zeka destekli mobil uygulama. Kullanıcılar %340 daha fazla alışkanlık oluşturuyor.</p>
+            </div>
+            <div class="p-8 border-t border-slate-700 flex justify-end gap-4">
+                <a href="#" class="px-8 py-4 bg-slate-800 rounded-2xl">App Store</a>
+                <a href="#" class="px-8 py-4 bg-indigo-600 rounded-2xl">Play Store</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- DENEYİM -->
+    <section id="deneyim" class="bg-slate-900 py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px]">04 — DENEYİM</span>
+                <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Yolculuğum</h2>
+            </div>
+            
+            <div class="space-y-12 max-w-3xl mx-auto">
+                <div class="flex gap-8">
+                    <div class="text-right w-36 shrink-0">
+                        <div class="text-emerald-400 font-semibold">2024 - Devam</div>
+                        <div class="text-sm text-slate-400">Şu anda</div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-slate-800 rounded-3xl p-8">
+                            <h4 class="font-semibold text-xl">Freelance Yazılım Danışmanı</h4>
+                            <p class="text-indigo-400">Kendi şirketim</p>
+                            <p class="mt-4 text-slate-300">10+ startup’a teknik danışmanlık verdim. Next.js ve AI entegrasyonları üzerine odaklandım.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-8">
+                    <div class="text-right w-36 shrink-0">
+                        <div class="text-emerald-400 font-semibold">2022 - 2024</div>
+                        <div class="text-sm text-slate-400">2 yıl</div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-slate-800 rounded-3xl p-8">
+                            <h4 class="font-semibold text-xl">Senior Full Stack Developer</h4>
+                            <p class="text-indigo-400">Remote • Berlin merkezli SaaS şirketi</p>
+                            <p class="mt-4 text-slate-300">Ekip lideri olarak 8 kişilik takımı yönettim. Aylık 2 milyon kullanıcıya hizmet verdik.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EĞİTİM -->
+    <section id="egitim" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="text-center mb-16">
+            <span class="uppercase text-indigo-400 text-sm tracking-[2px]">05 — EĞİTİM</span>
+            <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Öğrenme Yolculuğum</h2>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="bg-slate-900 rounded-3xl p-8 card-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-2xl font-semibold">Bilgisayar Mühendisliği</h3>
+                        <p class="text-indigo-400">Boğaziçi Üniversitesi • İstanbul</p>
+                    </div>
+                    <div class="text-right text-sm text-slate-400">
+                        2017 — 2021<br>
+                        <span class="bg-emerald-400 text-slate-900 px-3 py-1 rounded-2xl text-xs font-bold">Mezun</span>
+                    </div>
+                </div>
+                <p class="mt-6 text-slate-400">Lisans derecesi. Tez konusu: "Derin Öğrenme ile Gerçek Zamanlı Nesne Tespiti".</p>
+                <div class="mt-8 text-xs uppercase flex items-center gap-2 text-slate-400">
+                    <i class="fa-solid fa-trophy"></i>
+                    En İyi Tez Ödülü • 2021
+                </div>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-8 card-hover">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-2xl font-semibold">Yapay Zeka ve Makine Öğrenmesi</h3>
+                        <p class="text-indigo-400">Coursera • Stanford University</p>
+                    </div>
+                    <div class="text-right text-sm text-slate-400">
+                        2023 — 2024<br>
+                        <span class="bg-amber-400 text-slate-900 px-3 py-1 rounded-2xl text-xs font-bold">Sertifika</span>
+                    </div>
+                </div>
+                <p class="mt-6 text-slate-400">Andrew Ng’nin ünlü kursu + 3 ek sertifika (LLM, Prompt Engineering, Computer Vision).</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- REFERANSLAR -->
+    <section id="referanslar" class="bg-slate-900 py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px]">06 — REFERANSLAR</span>
+                <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Bana Ne Diyorlar?</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-slate-800 rounded-3xl p-8 testimonial-card">
+                    <div class="flex gap-3 mb-6">
+                        <div class="w-10 h-10 bg-orange-400 rounded-2xl flex items-center justify-center text-white text-xl">🧑‍💼</div>
+                        <div>
+                            <p class="font-semibold">Mehmet Can</p>
+                            <p class="text-xs text-slate-400">CTO @ TechFlow Startup</p>
+                        </div>
+                    </div>
+                    <p class="italic text-slate-300">"Alperen ile çalışmak bir zevkti. AI projemizi 3 ayda hayata geçirdi. Hem teknik hem de vizyon olarak çok güçlü."</p>
+                    <div class="text-amber-400 mt-8">★★★★★</div>
+                </div>
+                <div class="bg-slate-800 rounded-3xl p-8 testimonial-card">
+                    <div class="flex gap-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-400 rounded-2xl flex items-center justify-center text-white text-xl">👩‍💻</div>
+                        <div>
+                            <p class="font-semibold">Elif Demir</p>
+                            <p class="text-xs text-slate-400">Kurucu Ortak @ HabitFlow</p>
+                        </div>
+                    </div>
+                    <p class="italic text-slate-300">"Mobil uygulamamızı sıfırdan tasarladı ve geliştirdi. Kullanıcılarımız %340 arttı. Tavsiye ederim!"</p>
+                    <div class="text-amber-400 mt-8">★★★★★</div>
+                </div>
+                <div class="bg-slate-800 rounded-3xl p-8 testimonial-card">
+                    <div class="flex gap-3 mb-6">
+                        <div class="w-10 h-10 bg-cyan-400 rounded-2xl flex items-center justify-center text-white text-xl">🧔</div>
+                        <div>
+                            <p class="font-semibold">Dr. Ahmet Kaya</p>
+                            <p class="text-xs text-slate-400">Profesör • Boğaziçi Üni.</p>
+                        </div>
+                    </div>
+                    <p class="italic text-slate-300">"Tez sürecinde mentörlüğünü yaptım. Olağanüstü bir öğrenci ve şimdi de harika bir profesyonel."</p>
+                    <div class="text-amber-400 mt-8">★★★★★</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- YENİ: BLOG -->
+    <section id="blog" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="text-center mb-16">
+            <span class="uppercase text-indigo-400 text-sm tracking-[2px]">07 — BLOG</span>
+            <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Son Yazılarım</h2>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div onclick="alert('Bu yazıya tıklandı! (Gerçek projede link ekleyebilirsin)')" class="blog-card bg-slate-900 rounded-3xl p-6 cursor-pointer">
+                <div class="text-emerald-400 text-xs mb-3">12 Nisan 2026 • 8 dk okuma</div>
+                <h3 class="text-xl font-semibold mb-3">2026’da LLM’ler ile Gerçek Zamanlı AI Agent’lar Nasıl İnşa Edilir?</h3>
+                <p class="text-slate-400">Next.js + LangChain + Vercel AI SDK ile sıfırdan AI agent kurma rehberi.</p>
+            </div>
+            <div onclick="alert('Bu yazıya tıklandı! (Gerçek projede link ekleyebilirsin)')" class="blog-card bg-slate-900 rounded-3xl p-6 cursor-pointer">
+                <div class="text-emerald-400 text-xs mb-3">5 Nisan 2026 • 6 dk okuma</div>
+                <h3 class="text-xl font-semibold mb-3">Web3 Freelance Platformu Kurmak: Tam Rehber</h3>
+                <p class="text-slate-400">Solidity kontratları, frontend entegrasyonu ve pazarlama taktikleri.</p>
+            </div>
+            <div onclick="alert('Bu yazıya tıklandı! (Gerçek projede link ekleyebilirsin)')" class="blog-card bg-slate-900 rounded-3xl p-6 cursor-pointer">
+                <div class="text-emerald-400 text-xs mb-3">28 Mart 2026 • 10 dk okuma</div>
+                <h3 class="text-xl font-semibold mb-3">HabitFlow’un Büyüme Hikayesi: 0’dan 45.000 Kullanıcıya</h3>
+                <p class="text-slate-400">Product-market fit bulma, viral loop’lar ve retention taktikleri.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- YENİ: SSS (FAQ) -->
+    <section id="faq" class="bg-slate-900 py-24">
+        <div class="max-w-3xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px]">08 — SSS</span>
+                <h2 class="section-title text-5xl font-semibold mt-3 mx-auto inline-block">Sık Sorulan Sorular</h2>
+            </div>
+            
+            <div class="space-y-4">
+                **Summary:**
+
+                        Freelance iş alıyor musun?
+                        <span class="text-2xl group-open:rotate-45 transition-transform">+</span>
+                    
+                    <p class="mt-4 text-slate-400">Evet! Özellikle AI entegrasyonu, Next.js projeleri ve mobil uygulamalar için açık durumdayım. Detaylı teklif için iletişime geç.</p>
+                **Summary:**
+
+                        Hangi şehirde çalışıyorsun?
+                        <span class="text-2xl group-open:rotate-45 transition-transform">+</span>
+                    
+                    <p class="mt-4 text-slate-400">İstanbul merkezliyim ama tamamen remote çalışıyorum. Dünyanın her yerinden projeler alıyorum.</p>
+                **Summary:**
+
+                        Açık kaynak projelere katkı veriyor musun?
+                        <span class="text-2xl group-open:rotate-45 transition-transform">+</span>
+                    
+                    <p class="mt-4 text-slate-400">Evet! GitHub profilimde 12+ açık kaynak projeye katkı verdim. İstersen linkini paylaşayım.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- İLETİŞİM -->
+    <section id="iletisim" class="max-w-7xl mx-auto px-6 py-24">
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+                <span class="uppercase text-indigo-400 text-sm tracking-[2px]">09 — İLETİŞİM</span>
+                <h2 class="section-title text-5xl font-semibold mt-3">Birlikte çalışalım!</h2>
+                <p class="text-slate-400 text-xl mt-6">Yeni bir proje, iş teklifi ya da sadece sohbet etmek istersen bana ulaşabilirsin.</p>
+                
+                <div class="mt-12 space-y-6">
+                    <a href="mailto:alperen@email.com" class="flex items-center gap-6 group">
+                        <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-3xl group-hover:bg-indigo-600 transition-colors">✉️</div>
+                        <div>
+                            <p class="font-medium text-lg">alperen@email.com</p>
+                            <p class="text-slate-400">Hemen cevap veriyorum</p>
+                        </div>
+                    </a>
+                    <a href="https://wa.me/905551234567" target="_blank" class="flex items-center gap-6 group">
+                        <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-3xl group-hover:bg-emerald-600 transition-colors">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-lg">WhatsApp: +90 555 123 45 67</p>
+                            <p class="text-slate-400">Her zaman açık</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <form class="bg-slate-900 rounded-3xl p-10 space-y-6" onsubmit="handleSubmit(event)">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-2">Adın Soyadın</label>
+                    <input type="text" id="name" class="w-full bg-slate-800 border border-transparent focus:border-indigo-400 rounded-2xl px-6 py-5 outline-none transition-colors" placeholder="Alperen Yılmaz" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-2">E-posta Adresin</label>
+                    <input type="email" id="email" class="w-full bg-slate-800 border border-transparent focus:border-indigo-400 rounded-2xl px-6 py-5 outline-none transition-colors" placeholder="ornek@email.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-2">Mesajın</label>
+                    <textarea id="message" rows="5" class="w-full bg-slate-800 border border-transparent focus:border-indigo-400 rounded-3xl px-6 py-5 outline-none resize-none transition-colors" placeholder="Merhaba Alperen, birlikte bir proje yapalım mı?"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 py-6 text-lg font-semibold rounded-3xl transition-all flex items-center justify-center gap-3">
+                    <span>Mesaj Gönder</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-black py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="text-slate-400 text-sm">
+                    © 2026 Alperen. Tüm hakları saklıdır.<br>
+                    Bu şablonu tamamen ücretsiz kullanabilir, istediğin gibi kişiselleştirebilirsin.
+                </div>
+                <div class="flex gap-8 text-sm text-slate-400">
+                    <a href="#" class="hover:text-white">Gizlilik</a>
+                    <a href="#" class="hover:text-white">KVKK</a>
+                    <a href="#" class="hover:text-white">LinkedIn</a>
+                    <a href="#" class="hover:text-white">GitHub</a>
+                </div>
+                <div onclick="window.location.reload()" class="cursor-pointer text-xs flex items-center gap-2 text-slate-500 hover:text-slate-300">
+                    <i class="fa-solid fa-rotate"></i>
+                    Sayfayı Yenile
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tailwind
+        function initializeTailwind() {
+            tailwind.config = { content: [], theme: { extend: {} } }
+        }
+        
+        // Mobil menü
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu')
+            menu.classList.toggle('hidden')
+        }
+        
+        // CV İndir
+        function downloadCV() {
+            const link = document.createElement('a')
+            link.href = 'https://picsum.photos/id/1015/800/600' // Gerçek PDF linkini buraya koy
+            link.download = 'Alperen_CV.pdf'
+            link.click()
+            alert('✅ CV indiriliyor... (Gerçek projede kendi PDF dosyanı koy!)')
+        }
+        
+        // Form
+        function handleSubmit(e) {
+            e.preventDefault()
+            alert('✅ Mesajın alındı! En kısa sürede cevap vereceğim. Teşekkürler!')
+            e.target.reset()
+        }
+        
+        // Counter animasyonu
+        function animateCounters() {
+            const counters = [
+                { id: 'counter-projects', target: 15 },
+                { id: 'counter-countries', target: 8 },
+                { id: 'counter-startups', target: 4 }
+            ]
+            counters.forEach(counter => {
+                const el = document.getElementById(counter.id)
+                let count = 0
+                const increment = Math.ceil(counter.target / 30)
+                const timer = setInterval(() => {
+                    count += increment
+                    if (count >= counter.target) {
+                        count = counter.target
+                        clearInterval(timer)
+                    }
+                    el.textContent = count
+                }, 40)
+            })
+        }
+        
+        // MODAL FONKSİYONLARI
+        function showProjectModal(id) {
+            document.getElementById('modal' + id).classList.remove('hidden')
+            document.getElementById('modal' + id).classList.add('flex')
+        }
+        
+        function hideAllModals() {
+            const modals = document.querySelectorAll('.fixed.inset-0')
+            modals.forEach(modal => {
+                modal.classList.add('hidden')
+                modal.classList.remove('flex')
+            })
+        }
+        
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            initializeTailwind()
+            animateCounters()
+            console.log('%c✅ Kişisel web sitesi şablonu (bayağı geliştirilmiş versiyon) yüklendi! 🎉', 'color:#6366f1; font-family:monospace; font-size:14px')
+            
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const target = document.querySelector(this.getAttribute('href'))
+                    if (target) {
+                        e.preventDefault()
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                })
+            })
+        }
+    </script>
+</body>
+</html>
